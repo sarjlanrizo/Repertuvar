@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="tr">
 <head>
+
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
@@ -8,73 +9,175 @@
 
 <style>
 
-body {
-    font-family: Arial, sans-serif;
-    background:#111;
-    color:white;
-    margin:0;
-    padding:20px;
+*{
+box-sizing:border-box;
 }
 
-h1 {
-    text-align:center;
+body{
+margin:0;
+padding:20px;
+background:#111;
+color:white;
+font-family:Arial;
 }
 
-.song {
-    background:#222;
-    padding:15px;
-    margin:10px 0;
-    border-radius:10px;
-    cursor:pointer;
-    font-size:20px;
+h1{
+text-align:center;
 }
 
-.lyrics {
-    display:none;
-    background:#333;
-    padding:20px;
-    border-radius:10px;
-    white-space:pre-line;
-    font-size:22px;
-    line-height:1.6;
+
+.card{
+position:relative;
+overflow:hidden;
+margin:12px 0;
+border-radius:12px;
 }
 
-button {
-    position:fixed;
-    right:25px;
-    bottom:25px;
-    width:60px;
-    height:60px;
-    border-radius:50%;
-    border:none;
-    font-size:35px;
-    background:#00c853;
-    color:white;
+
+.song{
+background:#222;
+padding:18px;
+font-size:21px;
+position:relative;
+z-index:2;
+transition:.3s;
 }
 
-input, textarea {
-    width:100%;
-    padding:10px;
-    margin:5px 0;
-    font-size:18px;
+
+.lyrics{
+
+display:none;
+background:#333;
+padding:20px;
+font-size:22px;
+line-height:1.7;
+white-space:pre-line;
+
 }
 
-.modal {
-    display:none;
-    position:fixed;
-    top:0;
-    left:0;
-    width:100%;
-    height:100%;
-    background:#000d;
-    padding:20px;
+
+
+.delete{
+
+position:absolute;
+right:0;
+top:0;
+height:100%;
+width:90px;
+
+background:#d50000;
+display:flex;
+align-items:center;
+justify-content:center;
+
+font-size:18px;
+
 }
 
-.box {
-    background:#222;
-    padding:20px;
-    border-radius:15px;
+
+.add{
+
+position:fixed;
+bottom:25px;
+right:25px;
+
+width:65px;
+height:65px;
+
+border-radius:50%;
+border:none;
+
+font-size:35px;
+
+background:#00c853;
+color:white;
+
 }
+
+
+
+.modal{
+
+display:none;
+
+position:fixed;
+inset:0;
+
+background:#000b;
+
+padding:20px;
+
+}
+
+
+
+.box{
+
+background:#222;
+
+padding:20px;
+
+border-radius:15px;
+
+margin-top:80px;
+
+}
+
+
+
+input,textarea{
+
+width:100%;
+padding:14px;
+
+margin-bottom:15px;
+
+font-size:18px;
+
+border-radius:8px;
+
+border:none;
+
+}
+
+
+
+.save{
+
+width:100%;
+padding:15px;
+
+font-size:20px;
+
+border:none;
+border-radius:10px;
+
+background:#00c853;
+
+color:white;
+
+}
+
+
+
+.close{
+
+width:100%;
+padding:12px;
+
+margin-top:10px;
+
+background:#555;
+
+color:white;
+
+border:0;
+
+border-radius:10px;
+
+}
+
+
 
 </style>
 
@@ -83,27 +186,45 @@ input, textarea {
 
 <body>
 
+
 <h1>🎸 Repertuvarım</h1>
 
-<div id="songs"></div>
+
+<div id="list"></div>
 
 
-<button onclick="openAdd()">+</button>
+
+<button class="add" onclick="openModal()">+</button>
+
 
 
 <div class="modal" id="modal">
 
+
 <div class="box">
 
-<h2>Yeni Şarkı</h2>
 
-<input id="title" placeholder="Şarkı adı">
+<h2>Yeni Eser</h2>
 
-<textarea id="lyrics" rows="10" placeholder="Sözler"></textarea>
 
-<button onclick="addSong()">Kaydet</button>
+<input id="name" placeholder="Eser adı">
+
+
+<textarea id="text" rows="8" placeholder="Sözler"></textarea>
+
+
+<button class="save" onclick="saveSong()">
+Kaydet
+</button>
+
+
+<button class="close" onclick="closeModal()">
+İptal
+</button>
+
 
 </div>
+
 
 </div>
 
@@ -112,40 +233,59 @@ input, textarea {
 <script>
 
 
-let songs = JSON.parse(localStorage.getItem("songs")) || [
-
-{
-title:"Örnek Şarkı",
-lyrics:"Buraya şarkı sözlerini yaz"
-}
-
-];
+let songs =
+JSON.parse(localStorage.getItem("songs"))
+||
+[];
 
 
-function showSongs(){
 
-let area=document.getElementById("songs");
-
-area.innerHTML="";
+function render(){
 
 
-songs.forEach((song,index)=>{
+let list=document.getElementById("list");
+
+list.innerHTML="";
+
+
+songs.forEach((s,i)=>{
 
 
 let div=document.createElement("div");
 
+div.className="card";
+
+
 div.innerHTML=
+
 `
-<div class="song" onclick="openLyrics(${index})">
-${song.title}
+
+<div class="delete"
+onclick="removeSong(${i})">
+Sil
 </div>
 
-<div class="lyrics" id="lyric${index}">
-${song.lyrics}
+
+<div class="song"
+onclick="openLyrics(${i})">
+
+${s.title}
+
 </div>
+
+
+<div class="lyrics"
+id="lyric${i}">
+
+${s.lyrics}
+
+</div>
+
+
 `;
 
-area.innerHTML+=div.outerHTML;
+
+list.appendChild(div);
 
 
 });
@@ -156,32 +296,53 @@ area.innerHTML+=div.outerHTML;
 
 function openLyrics(i){
 
-let box=document.getElementById("lyric"+i);
+let l=document.getElementById("lyric"+i);
 
-if(box.style.display=="block"){
-box.style.display="none";
+if(l.style.display=="block")
+l.style.display="none";
+
+else
+l.style.display="block";
+
+
 }
 
-else{
-box.style.display="block";
-}
-
-}
 
 
 
-function openAdd(){
+function openModal(){
 
 document.getElementById("modal").style.display="block";
 
 }
 
 
-function addSong(){
 
-let title=document.getElementById("title").value;
+function closeModal(){
 
-let lyrics=document.getElementById("lyrics").value;
+document.getElementById("modal").style.display="none";
+
+}
+
+
+
+function saveSong(){
+
+
+let title=document.getElementById("name").value.trim();
+
+let lyrics=document.getElementById("text").value.trim();
+
+
+
+if(!title){
+
+alert("Eser adı yaz");
+
+return;
+
+}
+
 
 
 songs.push({
@@ -192,19 +353,54 @@ lyrics:lyrics
 });
 
 
-localStorage.setItem("songs",JSON.stringify(songs));
+
+localStorage.setItem(
+"songs",
+JSON.stringify(songs)
+);
 
 
-document.getElementById("modal").style.display="none";
+
+document.getElementById("name").value="";
+document.getElementById("text").value="";
 
 
-showSongs();
+closeModal();
+
+render();
 
 
 }
 
 
-showSongs();
+
+
+function removeSong(i){
+
+
+if(confirm("Bu eseri silmek istiyor musun?")){
+
+
+songs.splice(i,1);
+
+
+localStorage.setItem(
+"songs",
+JSON.stringify(songs)
+);
+
+
+render();
+
+
+}
+
+
+}
+
+
+
+render();
 
 
 </script>
