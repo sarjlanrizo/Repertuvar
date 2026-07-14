@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Repertuvarım</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f4f7f6;
+            color: #333;
+            margin: 0;
+            padding: 20px;
+        }
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+        }
+        h1 {
+            text-align: center;
+            color: #2c3e50;
+        }
+        .search-box {
+            width: 100%;
+            padding: 12px;
+            font-size: 16px;
+            border: 2px solid #bdc3c7;
+            border-radius: 8px;
+            box-sizing: border-box;
+            margin-bottom: 20px;
+            outline: none;
+        }
+        .search-box:focus {
+            border-color: #3498db;
+        }
+        .song-card {
+            background: #fff;
+            margin-bottom: 10px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        .song-title {
+            padding: 15px;
+            margin: 0;
+            cursor: pointer;
+            background: #fff;
+            font-size: 18px;
+            font-weight: 600;
+            transition: background 0.2s;
+            user-select: none;
+        }
+        .song-title:hover {
+            background: #edf2f7;
+        }
+        .song-lyrics {
+            display: none;
+            padding: 15px;
+            background: #fafafa;
+            border-top: 1px solid #eee;
+            white-space: pre-line; /* Satır başlarını korur */
+            line-height: 1.6;
+            font-size: 15px;
+            color: #4a5568;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>🎵 Repertuvar</h1>
+    
+    <input type="text" id="searchInput" class="search-box" placeholder="Şarkı veya söz ara...">
+
+    <div id="songList"></div>
+</div>
+
+<script>
+// ŞARKILARINI BURAYA EKLE
+// Baş harflerine göre karışık yazsan bile sistem otomatik alfabetik sıralar.
+const songs = [
+    {
+        title: "Ah Yalan Dünya",
+        lyrics: "Hep sen mi ağladın hep sen mi yandın\nBende gülemedim yalan dünyada\nSen beni gönlümce mutlu mu sandın\nÖmrümü boş yere çalan dünyada"
+    },
+    {
+        title: "Uzun İnce Bir Yoldayım",
+        lyrics: "Uzun ince bir yoldayım\nGidiyorum gündüz gece\nBilmiyorum ne haldeyim\nGidiyorum gündüz gece"
+    },
+    {
+        title: "Mihriban",
+        lyrics: "Sarı saçlarına deli gönlümü\nBağlamışlar çözülmüyor Mihriban\nAyrılıktan zor belleme ölümü\nGörmeyince sezilmiyor Mihriban"
+    },
+    {
+        title: "Gesi Bağları",
+        lyrics: "Gesi bağlarında dolanıyorum\nYitirdim yarimi aranıyorum\nBir tek selamına güveniyorum"
+    }
+];
+
+// Alfabetik Sıralama (Türkçe karakter duyarlı)
+songs.sort((a, b) => a.title.localeCompare(b.title, 'tr'));
+
+const songListContainer = document.getElementById('songList');
+const searchInput = document.getElementById('searchInput');
+
+// Şarkıları Ekrana Basma Fonksiyonu
+function displaySongs(filterText = "") {
+    songListContainer.innerHTML = "";
+    
+    songs.forEach((song, index) => {
+        // Arama filtresi (Hem başlıkta hem sözlerde arar)
+        const matchesTitle = song.title.toLowerCase().includes(filterText.toLowerCase());
+        const matchesLyrics = song.lyrics.toLowerCase().includes(filterText.toLowerCase());
+        
+        if (matchesTitle || matchesLyrics) {
+            const songCard = document.createElement('div');
+            songCard.className = 'song-card';
+            
+            songCard.innerHTML = `
+                <div class="song-title" onclick="toggleLyrics(${index})">${song.title}</div>
+                <div class="song-lyrics" id="lyrics-${index}">${song.lyrics}</div>
+            `;
+            
+            songListContainer.appendChild(songCard);
+        }
+    });
+}
+
+// Sözleri Açma / Kapatma Fonksiyonu
+function toggleLyrics(index) {
+    const lyricsDiv = document.getElementById(`lyrics-${index}`);
+    if (lyricsDiv.style.display === "block") {
+        lyricsDiv.style.display = "none";
+    } else {
+        // Diğer açık sözleri kapatmak istersen bu satırı aktif edebilirsin:
+        // document.querySelectorAll('.song-lyrics').forEach(el => el.style.display = 'none');
+        lyricsDiv.style.display = "block";
+    }
+}
+
+// Arama Dinleyicisi
+searchInput.addEventListener('input', (e) => {
+    displaySongs(e.target.value);
+});
+
+// İlk açılışta şarkıları yükle
+displaySongs();
+</script>
+
+</body>
+</html>
