@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+
+<html lang="tr">
+
+<head>
+
+<meta charset="UTF-8">
+
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+
+<title>Eser</title>
+
+
+<style>
+
+body{
+
+background:#111;
+
+color:white;
+
+font-family:Arial;
+
+padding:20px;
+
+}
+
+
+.back{
+
+font-size:20px;
+
+background:#333;
+
+padding:12px;
+
+border-radius:10px;
+
+display:inline-block;
+
+}
+
+
+
+h1{
+
+font-size:28px;
+
+}
+
+
+.lyrics{
+
+font-size:25px;
+
+line-height:1.8;
+
+white-space:pre-line;
+
+}
+
+
+</style>
+
+
+</head>
+
+
+<body>
+
+
+<div class="back" onclick="history.back()">
+
+← Geri
+
+</div>
+
+
+<h1 id="title"></h1>
+
+
+<div class="lyrics" id="lyrics"></div>
+
+
+
+<script>
+
+
+let id=
+new URLSearchParams(location.search)
+.get("id");
+
+
+
+let songs=
+JSON.parse(localStorage.getItem("songs")) || [];
+
+
+
+document.getElementById("title")
+.innerHTML=songs[id].title;
+
+
+document.getElementById("lyrics")
+.innerHTML=songs[id].lyrics;
+
+
+
+</script>
+
+
+</body>
+
+</html>
