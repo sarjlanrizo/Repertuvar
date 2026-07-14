@@ -1,24 +1,20 @@
 <!DOCTYPE html>
 <html lang="tr">
+
 <head>
 
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1">
 
 <title>Repertuvarım</title>
 
 <style>
 
-*{
-box-sizing:border-box;
-}
-
 body{
-margin:0;
-padding:20px;
 background:#111;
 color:white;
 font-family:Arial;
+padding:20px;
 }
 
 h1{
@@ -26,51 +22,15 @@ text-align:center;
 }
 
 
-.card{
-position:relative;
-overflow:hidden;
+.song{
+
+background:#222;
+padding:20px;
 margin:12px 0;
 border-radius:12px;
-}
-
-
-.song{
-background:#222;
-padding:18px;
-font-size:21px;
-position:relative;
-z-index:2;
-transition:.3s;
-}
-
-
-.lyrics{
-
-display:none;
-background:#333;
-padding:20px;
 font-size:22px;
-line-height:1.7;
-white-space:pre-line;
 
-}
-
-
-
-.delete{
-
-position:absolute;
-right:0;
-top:0;
-height:100%;
-width:90px;
-
-background:#d50000;
-display:flex;
-align-items:center;
-justify-content:center;
-
-font-size:18px;
+user-select:none;
 
 }
 
@@ -78,14 +38,15 @@ font-size:18px;
 .add{
 
 position:fixed;
-bottom:25px;
 right:25px;
+bottom:25px;
 
 width:65px;
 height:65px;
 
 border-radius:50%;
-border:none;
+
+border:0;
 
 font-size:35px;
 
@@ -103,7 +64,7 @@ display:none;
 position:fixed;
 inset:0;
 
-background:#000b;
+background:#000c;
 
 padding:20px;
 
@@ -119,62 +80,50 @@ padding:20px;
 
 border-radius:15px;
 
-margin-top:80px;
+margin-top:100px;
 
 }
-
 
 
 input,textarea{
 
 width:100%;
-padding:14px;
+padding:15px;
 
 margin-bottom:15px;
 
 font-size:18px;
 
-border-radius:8px;
-
-border:none;
-
 }
 
+
+
+button{
+
+padding:15px;
+border:0;
+border-radius:10px;
+
+font-size:18px;
+
+}
 
 
 .save{
 
 width:100%;
-padding:15px;
-
-font-size:20px;
-
-border:none;
-border-radius:10px;
-
 background:#00c853;
-
 color:white;
 
 }
 
 
 
-.close{
+.delete{
 
-width:100%;
-padding:12px;
-
-margin-top:10px;
-
-background:#555;
-
+background:#d50000;
 color:white;
-
-border:0;
-
-border-radius:10px;
-
+width:100%;
 }
 
 
@@ -193,38 +142,26 @@ border-radius:10px;
 <div id="list"></div>
 
 
-
-<button class="add" onclick="openModal()">+</button>
+<button class="add" onclick="openAdd()">+</button>
 
 
 
 <div class="modal" id="modal">
 
-
 <div class="box">
-
 
 <h2>Yeni Eser</h2>
 
+<input id="title" placeholder="Eser adı">
 
-<input id="name" placeholder="Eser adı">
-
-
-<textarea id="text" rows="8" placeholder="Sözler"></textarea>
+<textarea id="lyrics" placeholder="Sözler"></textarea>
 
 
-<button class="save" onclick="saveSong()">
+<button class="save" onclick="addSong()">
 Kaydet
 </button>
 
-
-<button class="close" onclick="closeModal()">
-İptal
-</button>
-
-
 </div>
-
 
 </div>
 
@@ -233,15 +170,12 @@ Kaydet
 <script>
 
 
-let songs =
-JSON.parse(localStorage.getItem("songs"))
-||
-[];
+let songs=
+JSON.parse(localStorage.getItem("songs")) || [];
 
 
 
 function render(){
-
 
 let list=document.getElementById("list");
 
@@ -253,36 +187,102 @@ songs.forEach((s,i)=>{
 
 let div=document.createElement("div");
 
-div.className="card";
+div.className="song";
 
 
-div.innerHTML=
-
-`
-
-<div class="delete"
-onclick="removeSong(${i})">
-Sil
-</div>
+div.innerHTML=s.title;
 
 
-<div class="song"
-onclick="openLyrics(${i})">
 
-${s.title}
+// normal tıklama
 
-</div>
+div.onclick=function(){
 
+location.href="sarki.html?id="+i;
 
-<div class="lyrics"
-id="lyric${i}">
-
-${s.lyrics}
-
-</div>
+};
 
 
-`;
+
+// uzun basma
+
+let timer;
+
+
+div.onmousedown=function(){
+
+timer=setTimeout(()=>{
+
+
+if(confirm(
+s.title+" silinsin mi?"
+)){
+
+
+songs.splice(i,1);
+
+localStorage.setItem(
+"songs",
+JSON.stringify(songs)
+);
+
+
+render();
+
+
+}
+
+
+},700);
+
+
+};
+
+
+div.onmouseup=function(){
+
+clearTimeout(timer);
+
+};
+
+
+
+div.ontouchstart=function(){
+
+timer=setTimeout(()=>{
+
+
+if(confirm(
+s.title+" silinsin mi?"
+)){
+
+
+songs.splice(i,1);
+
+localStorage.setItem(
+"songs",
+JSON.stringify(songs)
+);
+
+
+render();
+
+
+}
+
+
+},700);
+
+
+};
+
+
+div.ontouchend=function(){
+
+clearTimeout(timer);
+
+};
+
 
 
 list.appendChild(div);
@@ -290,27 +290,12 @@ list.appendChild(div);
 
 });
 
-}
-
-
-
-function openLyrics(i){
-
-let l=document.getElementById("lyric"+i);
-
-if(l.style.display=="block")
-l.style.display="none";
-
-else
-l.style.display="block";
-
 
 }
 
 
 
-
-function openModal(){
+function openAdd(){
 
 document.getElementById("modal").style.display="block";
 
@@ -318,82 +303,32 @@ document.getElementById("modal").style.display="block";
 
 
 
-function closeModal(){
+function addSong(){
 
-document.getElementById("modal").style.display="none";
-
-}
-
+let title=
+document.getElementById("title").value;
 
 
-function saveSong(){
-
-
-let title=document.getElementById("name").value.trim();
-
-let lyrics=document.getElementById("text").value.trim();
-
-
-
-if(!title){
-
-alert("Eser adı yaz");
-
-return;
-
-}
+let lyrics=
+document.getElementById("lyrics").value;
 
 
 
 songs.push({
 
-title:title,
-lyrics:lyrics
+title,
+lyrics
 
 });
 
 
-
 localStorage.setItem(
 "songs",
 JSON.stringify(songs)
 );
 
 
-
-document.getElementById("name").value="";
-document.getElementById("text").value="";
-
-
-closeModal();
-
-render();
-
-
-}
-
-
-
-
-function removeSong(i){
-
-
-if(confirm("Bu eseri silmek istiyor musun?")){
-
-
-songs.splice(i,1);
-
-
-localStorage.setItem(
-"songs",
-JSON.stringify(songs)
-);
-
-
-render();
-
-
-}
+location.reload();
 
 
 }
@@ -407,4 +342,5 @@ render();
 
 
 </body>
+
 </html>
