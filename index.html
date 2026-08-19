@@ -226,7 +226,7 @@ color:white;
 <script>
 
 let songs = JSON.parse(localStorage.getItem("songs")) || [];
-let editIndex = null; // Düzenleme modunda hangi şarkının düzenlendiğini tutar
+let editIndex = null;
 
 function render(){
   let list = document.getElementById("list");
@@ -251,7 +251,7 @@ function render(){
     editBtn.className = "edit-btn";
     editBtn.innerText = "✏️ Düzenle";
     editBtn.onclick = function(e){
-      e.stopPropagation(); // Şarkı detayına gitmeyi ve timer'ı engeller
+      e.stopPropagation();
       openEdit(i);
     };
 
@@ -360,11 +360,9 @@ function saveSong(){
   }
 
   if(editIndex !== null){
-    // Var olan eseri güncelle
     songs[editIndex].title = title;
     songs[editIndex].lyrics = lyrics;
   } else {
-    // Yeni eser ekle
     songs.push({ title, lyrics });
   }
 
@@ -373,19 +371,47 @@ function saveSong(){
   render();
 }
 
-// 💾 Yedeği Dosya Olarak İndir (Export)
-function exportBackup(){
-  if(songs.length === 0){
+// 💾 iPhone & Safari Uyumlu Yedek İndirme (Paylaş / Dosyalara Kaydet)
+async function exportBackup() {
+  if (songs.length === 0) {
     alert("İndirilecek kayıtlı eser bulunamadı.");
     return;
   }
-  const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(songs, null, 2));
-  const downloadAnchor = document.createElement("a");
-  downloadAnchor.setAttribute("href", dataStr);
-  downloadAnchor.setAttribute("download", "repertuvar_yedek_" + new Date().toISOString().slice(0,10) + ".json");
-  document.body.appendChild(downloadAnchor);
-  downloadAnchor.click();
-  downloadAnchor.remove();
+
+  const jsonStr = JSON.stringify(songs, null, 2);
+  const fileName = "repertuvar_yedek_" + new Date().toISOString().slice(0, 10) + ".json";
+  const blob = new Blob([jsonStr], { type: "application/json" });
+  const file = new File([blob], fileName, { type: "application/json" });
+
+  // 1. iPhone Paylaşım Menüsü (Dosyalara Kaydet / AirDrop / WhatsApp)
+  if (navigator.canShare && navigator.canShare({ files: [file] })) {
+    try {
+      await navigator.share({
+        files: [file],
+        title: "Repertuvar Yedeği",
+        text: "Repertuvar yedek dosyam"
+      });
+      return;
+    } catch (err) {
+      if (err.name !== "AbortError") {
+        console.log("Paylaşım iptal edildi veya desteklenmedi.");
+      }
+    }
+  }
+
+  // 2. Doğrudan İndirme Fallback
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = fileName;
+  a.style.display = "none";
+  document.body.appendChild(a);
+  a.click();
+
+  setTimeout(() => {
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  }, 1500);
 }
 
 // 📂 İndirilen Yedeği Geri Yükle (Import)
