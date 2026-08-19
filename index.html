@@ -21,20 +21,72 @@ box-sizing:border-box;
 
 h1{
 text-align:center;
+margin-bottom:15px;
+}
+
+/* Yedekleme Butonları Çubuğu */
+.backup-bar{
+display:flex;
+gap:10px;
+justify-content:center;
+margin-bottom:20px;
+}
+
+.backup-btn{
+background:#333;
+color:#bbb;
+border:1px solid #444;
+padding:8px 14px;
+font-size:14px;
+border-radius:8px;
+cursor:pointer;
+transition:0.2s;
+}
+
+.backup-btn:hover{
+background:#444;
+color:#fff;
 }
 
 .song{
 background:#222;
-padding:20px;
+padding:18px 20px;
 margin:12px 0;
 border-radius:12px;
 font-size:22px;
 user-select:none;
 cursor:pointer;
+display:flex;
+justify-content:space-between;
+align-items:center;
 }
 
 .song:active{
 background:#2a2a2a;
+}
+
+.song-title{
+flex:1;
+overflow:hidden;
+text-overflow:ellipsis;
+white-space:nowrap;
+}
+
+.edit-btn{
+background:#333;
+border:1px solid #444;
+color:#bbb;
+font-size:16px;
+padding:8px 12px;
+border-radius:8px;
+cursor:pointer;
+margin-left:10px;
+transition:0.2s;
+}
+
+.edit-btn:hover{
+background:#444;
+color:#fff;
 }
 
 .add{
@@ -49,7 +101,7 @@ font-size:35px;
 background:#00c853;
 color:white;
 cursor:pointer;
-box-shadow: 0 4px 10px rgba(0,0,0,0.5);
+box-shadow:0 4px 10px rgba(0,0,0,0.5);
 }
 
 .modal{
@@ -138,6 +190,13 @@ color:white;
 
 <h1>🎸 Repertuvarım</h1>
 
+<!-- Yedekleme Araç Çubuğu -->
+<div class="backup-bar">
+  <button class="backup-btn" onclick="exportBackup()">💾 Yedeği İndir (JSON)</button>
+  <button class="backup-btn" onclick="document.getElementById('importFile').click()">📂 Yedek Yükle</button>
+  <input type="file" id="importFile" accept=".json" style="display:none" onchange="importBackup(event)">
+</div>
+
 <div id="list"></div>
 
 <button class="add" onclick="openAdd()">+</button>
@@ -146,11 +205,10 @@ color:white;
 
 <div class="box">
 
-<h2>Yeni Eser</h2>
+<h2 id="modal-title">Yeni Eser</h2>
 
 <input id="title" placeholder="Eser / Sanatçı adı">
 
-<!-- İnternetten bulmayı ve yapıştırmayı kolaylaştıran butonlar -->
 <div class="btn-row">
   <button type="button" class="btn-search" onclick="searchLyricsOnline()">🌐 Web'de Ara</button>
   <button type="button" class="btn-paste" onclick="pasteFromClipboard()">📋 Yapıştır</button>
@@ -158,7 +216,7 @@ color:white;
 
 <textarea id="lyrics" placeholder="Sözler buraya gelecek..."></textarea>
 
-<button class="save" onclick="addSong()">Kaydet</button>
+<button class="save" onclick="saveSong()">Kaydet</button>
 <button type="button" class="close" onclick="closeAdd()">Vazgeç</button>
 
 </div>
@@ -168,17 +226,39 @@ color:white;
 <script>
 
 let songs = JSON.parse(localStorage.getItem("songs")) || [];
+let editIndex = null; // Düzenleme modunda hangi şarkının düzenlendiğini tutar
 
 function render(){
   let list = document.getElementById("list");
   list.innerHTML = "";
 
+  if(songs.length === 0){
+    list.innerHTML = "<p style='text-align:center;color:#666;margin-top:40px;'>Repertuvar henüz boş. '+' butonuyla eser ekleyebilirsin.</p>";
+    return;
+  }
+
   songs.forEach((s, i) => {
     let div = document.createElement("div");
     div.className = "song";
-    div.innerHTML = s.title;
 
-    // Normal tıklama -> Detay sayfasına gider
+    // Şarkı adı alanı
+    let titleSpan = document.createElement("span");
+    titleSpan.className = "song-title";
+    titleSpan.innerText = s.title;
+
+    // Düzenle butonu
+    let editBtn = document.createElement("button");
+    editBtn.className = "edit-btn";
+    editBtn.innerText = "✏️ Düzenle";
+    editBtn.onclick = function(e){
+      e.stopPropagation(); // Şarkı detayına gitmeyi ve timer'ı engeller
+      openEdit(i);
+    };
+
+    div.appendChild(titleSpan);
+    div.appendChild(editBtn);
+
+    // Tıklama ile detay sayfasına gitme
     div.onclick = function(){
       location.href = "sarki.html?id=" + i;
     };
@@ -219,6 +299,19 @@ function render(){
 }
 
 function openAdd(){
+  editIndex = null;
+  document.getElementById("modal-title").innerText = "Yeni Eser";
+  document.getElementById("title").value = "";
+  document.getElementById("lyrics").value = "";
+  document.getElementById("modal").style.display = "block";
+  document.getElementById("title").focus();
+}
+
+function openEdit(index){
+  editIndex = index;
+  document.getElementById("modal-title").innerText = "Eseri Düzenle";
+  document.getElementById("title").value = songs[index].title;
+  document.getElementById("lyrics").value = songs[index].lyrics || "";
   document.getElementById("modal").style.display = "block";
   document.getElementById("title").focus();
 }
@@ -227,6 +320,7 @@ function closeAdd(){
   document.getElementById("modal").style.display = "none";
   document.getElementById("title").value = "";
   document.getElementById("lyrics").value = "";
+  editIndex = null;
 }
 
 function closeModalOnBg(e){
@@ -235,7 +329,6 @@ function closeModalOnBg(e){
   }
 }
 
-// 🌐 Şarkı adını alıp doğrudan Google'da söz araması açar
 function searchLyricsOnline(){
   let title = document.getElementById("title").value.trim();
   if(!title){
@@ -246,7 +339,6 @@ function searchLyricsOnline(){
   window.open("https://www.google.com/search?q=" + query, "_blank");
 }
 
-// 📋 Panodaki kopyalanmış sözü tek tıkla textarea alanına aktarır
 async function pasteFromClipboard(){
   try {
     const text = await navigator.clipboard.readText();
@@ -258,7 +350,7 @@ async function pasteFromClipboard(){
   }
 }
 
-function addSong(){
+function saveSong(){
   let title = document.getElementById("title").value.trim();
   let lyrics = document.getElementById("lyrics").value.trim();
 
@@ -267,14 +359,59 @@ function addSong(){
     return;
   }
 
-  songs.push({
-    title,
-    lyrics
-  });
+  if(editIndex !== null){
+    // Var olan eseri güncelle
+    songs[editIndex].title = title;
+    songs[editIndex].lyrics = lyrics;
+  } else {
+    // Yeni eser ekle
+    songs.push({ title, lyrics });
+  }
 
   localStorage.setItem("songs", JSON.stringify(songs));
   closeAdd();
   render();
+}
+
+// 💾 Yedeği Dosya Olarak İndir (Export)
+function exportBackup(){
+  if(songs.length === 0){
+    alert("İndirilecek kayıtlı eser bulunamadı.");
+    return;
+  }
+  const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(songs, null, 2));
+  const downloadAnchor = document.createElement("a");
+  downloadAnchor.setAttribute("href", dataStr);
+  downloadAnchor.setAttribute("download", "repertuvar_yedek_" + new Date().toISOString().slice(0,10) + ".json");
+  document.body.appendChild(downloadAnchor);
+  downloadAnchor.click();
+  downloadAnchor.remove();
+}
+
+// 📂 İndirilen Yedeği Geri Yükle (Import)
+function importBackup(event){
+  const file = event.target.files[0];
+  if(!file) return;
+
+  const reader = new FileReader();
+  reader.onload = function(e){
+    try {
+      const importedSongs = JSON.parse(e.target.result);
+      if(Array.isArray(importedSongs)){
+        if(confirm("Mevcut listenin üzerine bu yedek yüklensin mi?")){
+          songs = importedSongs;
+          localStorage.setItem("songs", JSON.stringify(songs));
+          render();
+          alert("Repertuvar başarıyla geri yüklendi!");
+        }
+      } else {
+        alert("Geçersiz yedek dosyası formatı.");
+      }
+    } catch(err) {
+      alert("Dosya okunurken bir hata oluştu.");
+    }
+  };
+  reader.readAsText(file);
 }
 
 render();
