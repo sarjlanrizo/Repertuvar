@@ -13,120 +13,121 @@
 body{
 background:#111;
 color:white;
-font-family:Arial;
+font-family:Arial, sans-serif;
 padding:20px;
+margin:0;
+box-sizing:border-box;
 }
 
 h1{
 text-align:center;
 }
 
-
 .song{
-
 background:#222;
 padding:20px;
 margin:12px 0;
 border-radius:12px;
 font-size:22px;
-
 user-select:none;
-
+cursor:pointer;
 }
 
+.song:active{
+background:#2a2a2a;
+}
 
 .add{
-
 position:fixed;
 right:25px;
 bottom:25px;
-
 width:65px;
 height:65px;
-
 border-radius:50%;
-
 border:0;
-
 font-size:35px;
-
 background:#00c853;
 color:white;
-
+cursor:pointer;
+box-shadow: 0 4px 10px rgba(0,0,0,0.5);
 }
-
-
 
 .modal{
-
 display:none;
-
 position:fixed;
 inset:0;
-
-background:#000c;
-
+background:rgba(0,0,0,0.8);
 padding:20px;
-
+overflow-y:auto;
+box-sizing:border-box;
 }
-
-
 
 .box{
-
 background:#222;
-
 padding:20px;
-
 border-radius:15px;
-
-margin-top:100px;
-
+margin:50px auto 20px auto;
+max-width:500px;
+box-sizing:border-box;
 }
 
-
-input,textarea{
-
+input, textarea{
 width:100%;
 padding:15px;
-
 margin-bottom:15px;
-
 font-size:18px;
-
+background:#333;
+color:white;
+border:1px solid #444;
+border-radius:10px;
+box-sizing:border-box;
+font-family:inherit;
 }
 
-
+textarea{
+height:160px;
+resize:vertical;
+}
 
 button{
-
 padding:15px;
 border:0;
 border-radius:10px;
-
 font-size:18px;
-
+cursor:pointer;
+font-weight:bold;
 }
 
+.btn-row{
+display:flex;
+gap:10px;
+margin-bottom:15px;
+}
+
+.btn-search{
+flex:1;
+background:#2979ff;
+color:white;
+}
+
+.btn-paste{
+flex:1;
+background:#ff9100;
+color:white;
+}
 
 .save{
-
 width:100%;
 background:#00c853;
 color:white;
-
+margin-bottom:10px;
 }
 
-
-
-.delete{
-
-background:#d50000;
-color:white;
+.close{
 width:100%;
+background:#444;
+color:white;
 }
-
-
 
 </style>
 
@@ -135,212 +136,150 @@ width:100%;
 
 <body>
 
-
 <h1>🎸 Repertuvarım</h1>
-
 
 <div id="list"></div>
 
-
 <button class="add" onclick="openAdd()">+</button>
 
-
-
-<div class="modal" id="modal">
+<div class="modal" id="modal" onclick="closeModalOnBg(event)">
 
 <div class="box">
 
 <h2>Yeni Eser</h2>
 
-<input id="title" placeholder="Eser adı">
+<input id="title" placeholder="Eser / Sanatçı adı">
 
-<textarea id="lyrics" placeholder="Sözler"></textarea>
+<!-- İnternetten bulmayı ve yapıştırmayı kolaylaştıran butonlar -->
+<div class="btn-row">
+  <button type="button" class="btn-search" onclick="searchLyricsOnline()">🌐 Web'de Ara</button>
+  <button type="button" class="btn-paste" onclick="pasteFromClipboard()">📋 Yapıştır</button>
+</div>
 
+<textarea id="lyrics" placeholder="Sözler buraya gelecek..."></textarea>
 
-<button class="save" onclick="addSong()">
-Kaydet
-</button>
+<button class="save" onclick="addSong()">Kaydet</button>
+<button type="button" class="close" onclick="closeAdd()">Vazgeç</button>
 
 </div>
 
 </div>
-
-
 
 <script>
 
-
-let songs=
-JSON.parse(localStorage.getItem("songs")) || [];
-
-
+let songs = JSON.parse(localStorage.getItem("songs")) || [];
 
 function render(){
+  let list = document.getElementById("list");
+  list.innerHTML = "";
 
-let list=document.getElementById("list");
+  songs.forEach((s, i) => {
+    let div = document.createElement("div");
+    div.className = "song";
+    div.innerHTML = s.title;
 
-list.innerHTML="";
+    // Normal tıklama -> Detay sayfasına gider
+    div.onclick = function(){
+      location.href = "sarki.html?id=" + i;
+    };
 
+    // Uzun basma ile silme kontrolü
+    let timer;
 
-songs.forEach((s,i)=>{
+    div.onmousedown = function(){
+      timer = setTimeout(() => {
+        if(confirm(s.title + " silinsin mi?")){
+          songs.splice(i, 1);
+          localStorage.setItem("songs", JSON.stringify(songs));
+          render();
+        }
+      }, 700);
+    };
 
+    div.onmouseup = function(){
+      clearTimeout(timer);
+    };
 
-let div=document.createElement("div");
+    div.ontouchstart = function(){
+      timer = setTimeout(() => {
+        if(confirm(s.title + " silinsin mi?")){
+          songs.splice(i, 1);
+          localStorage.setItem("songs", JSON.stringify(songs));
+          render();
+        }
+      }, 700);
+    };
 
-div.className="song";
+    div.ontouchend = function(){
+      clearTimeout(timer);
+    };
 
-
-div.innerHTML=s.title;
-
-
-
-// normal tıklama
-
-div.onclick=function(){
-
-location.href="sarki.html?id="+i;
-
-};
-
-
-
-// uzun basma
-
-let timer;
-
-
-div.onmousedown=function(){
-
-timer=setTimeout(()=>{
-
-
-if(confirm(
-s.title+" silinsin mi?"
-)){
-
-
-songs.splice(i,1);
-
-localStorage.setItem(
-"songs",
-JSON.stringify(songs)
-);
-
-
-render();
-
-
+    list.appendChild(div);
+  });
 }
-
-
-},700);
-
-
-};
-
-
-div.onmouseup=function(){
-
-clearTimeout(timer);
-
-};
-
-
-
-div.ontouchstart=function(){
-
-timer=setTimeout(()=>{
-
-
-if(confirm(
-s.title+" silinsin mi?"
-)){
-
-
-songs.splice(i,1);
-
-localStorage.setItem(
-"songs",
-JSON.stringify(songs)
-);
-
-
-render();
-
-
-}
-
-
-},700);
-
-
-};
-
-
-div.ontouchend=function(){
-
-clearTimeout(timer);
-
-};
-
-
-
-list.appendChild(div);
-
-
-});
-
-
-}
-
-
 
 function openAdd(){
-
-document.getElementById("modal").style.display="block";
-
+  document.getElementById("modal").style.display = "block";
+  document.getElementById("title").focus();
 }
 
+function closeAdd(){
+  document.getElementById("modal").style.display = "none";
+  document.getElementById("title").value = "";
+  document.getElementById("lyrics").value = "";
+}
 
+function closeModalOnBg(e){
+  if(e.target.id === "modal"){
+    closeAdd();
+  }
+}
+
+// 🌐 Şarkı adını alıp doğrudan Google'da söz araması açar
+function searchLyricsOnline(){
+  let title = document.getElementById("title").value.trim();
+  if(!title){
+    alert("Lütfen önce aratmak istediğin şarkının adını yaz.");
+    return;
+  }
+  let query = encodeURIComponent(title + " şarkı sözleri");
+  window.open("https://www.google.com/search?q=" + query, "_blank");
+}
+
+// 📋 Panodaki kopyalanmış sözü tek tıkla textarea alanına aktarır
+async function pasteFromClipboard(){
+  try {
+    const text = await navigator.clipboard.readText();
+    if(text){
+      document.getElementById("lyrics").value = text;
+    }
+  } catch (err) {
+    alert("Pano erişimine izin verin veya doğrudan kutuya basılı tutup yapıştırın.");
+  }
+}
 
 function addSong(){
+  let title = document.getElementById("title").value.trim();
+  let lyrics = document.getElementById("lyrics").value.trim();
 
-let title=
-document.getElementById("title").value;
+  if(!title){
+    alert("Lütfen bir eser adı girin.");
+    return;
+  }
 
+  songs.push({
+    title,
+    lyrics
+  });
 
-let lyrics=
-document.getElementById("lyrics").value;
-
-
-
-songs.push({
-
-title,
-lyrics
-
-});
-
-
-localStorage.setItem(
-"songs",
-JSON.stringify(songs)
-);
-
-
-location.reload();
-
-
+  localStorage.setItem("songs", JSON.stringify(songs));
+  closeAdd();
+  render();
 }
 
-
-
 render();
-
 
 </script>
 
-
 </body>
-
 </html>
