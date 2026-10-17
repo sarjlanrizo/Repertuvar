@@ -6,7 +6,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 
-<title>Rizo Repertuvar</title>
+<title>Rızo Repertuvar</title>
 
 <style>
 
@@ -262,7 +262,7 @@ color:white;
     <ellipse cx="32" cy="46" rx="3.5" ry="3.5" fill="#111" />
     <rect x="28" y="55" width="8" height="2" rx="1" fill="#111" />
   </svg>
-  <span>Hasan Altun Repertuvar</span>
+  <span>Rızo Repertuvar</span>
 </h1>
 
 <!-- Yedekleme Çubuğu -->
@@ -493,7 +493,7 @@ async function exportBackup() {
 
   sortSongs();
   const jsonStr = JSON.stringify(songs, null, 2);
-  const fileName = "hasan_altun_repertuvar_" + new Date().toISOString().slice(0, 10) + ".json";
+  const fileName = "rizo_repertuvar_" + new Date().toISOString().slice(0, 10) + ".json";
   const blob = new Blob([jsonStr], { type: "application/json" });
   const file = new File([blob], fileName, { type: "application/json" });
 
@@ -501,8 +501,8 @@ async function exportBackup() {
     try {
       await navigator.share({
         files: [file],
-        title: "Hasan Altun Repertuvar Yedeği",
-        text: "Hasan Altun Repertuvar yedek dosyam"
+        title: "Rızo Repertuvar Yedeği",
+        text: "Rızo Repertuvar yedek dosyam"
       });
       return;
     } catch (err) {
@@ -534,7 +534,7 @@ function exportTextBackup() {
   }
 
   sortSongs();
-  let textContent = "HASAN ALTUN REPERTUVAR LİSTESİ\n";
+  let textContent = "RIZO REPERTUVAR LİSTESİ\n";
   textContent += "========================================\n\n";
 
   songs.forEach((song, index) => {
@@ -543,7 +543,7 @@ function exportTextBackup() {
     textContent += (song.lyrics || "(Bu esere ait söz eklenmemiş)") + "\n\n\n";
   });
 
-  const fileName = "hasan_altun_repertuvar_" + new Date().toISOString().slice(0, 10) + ".txt";
+  const fileName = "rizo_repertuvar_" + new Date().toISOString().slice(0, 10) + ".txt";
   const blob = new Blob([textContent], { type: "text/plain;charset=utf-8" });
   const url = URL.createObjectURL(blob);
   const a = document.createElement("a");
